@@ -40,7 +40,6 @@ def init_user(user_id):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     init_user(user_id)
-
     if context.args:
         ref_id = context.args[0]
         if ref_id != user_id:
@@ -49,7 +48,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 data[ref_id]["referrals"].append(user_id)
                 data[ref_id]["balance"] += 3000
                 save_data(data)
-
     buttons = [[InlineKeyboardButton(ch["name"], url=ch["url"])] for ch in REQUIRED_CHANNELS]
     buttons.append([InlineKeyboardButton("✅ I’ve Joined", callback_data="joined")])
     await update.message.reply_text("📢 Please join all the required channels:", reply_markup=InlineKeyboardMarkup(buttons))
@@ -98,7 +96,7 @@ async def channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ I didn't understand that. Use the buttons.")
 
-# === BOT INIT ===
+# === INIT ===
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(joined, pattern="joined"))
