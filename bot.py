@@ -101,16 +101,11 @@ app.add_handler(MessageHandler(filters.Text("📥Withdraw"), withdraw))
 app.add_handler(MessageHandler(filters.Text("📢Channels"), channels))
 app.add_handler(MessageHandler(filters.ALL, unknown))
 
+import asyncio
+
+async def main():
+    print("✅ Bot is running...")
+    await app.run_polling()
+
 if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        print("✅ Bot is running...")
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling()
-        await app.updater.idle()
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    asyncio.run(main())
