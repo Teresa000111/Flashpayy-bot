@@ -1,14 +1,12 @@
 import os
 import json
-from telegram import (
-    Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
-)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, MessageHandler,
     CallbackQueryHandler, ContextTypes, filters
 )
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("BOT_TOKEN") or "8121739214:AAEK80VGwuS09y_exayUS6PRDryAldvbmkg"
 DATA_FILE = "users.json"
 
 REQUIRED_CHANNELS = [
@@ -100,6 +98,7 @@ async def channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ I didn't understand that. Use the buttons.")
 
+# === BOT INIT ===
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(joined, pattern="joined"))
@@ -109,13 +108,7 @@ app.add_handler(MessageHandler(filters.Text("📥Withdraw"), withdraw))
 app.add_handler(MessageHandler(filters.Text("📢Channels"), channels))
 app.add_handler(MessageHandler(filters.ALL, unknown))
 
+# === RUN ===
 if __name__ == "__main__":
-    import asyncio
-    async def main():
-        print("✅ Bot is running...")
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling()
-        await app.updater.idle()
-
-    asyncio.run(main())
+    print("✅ Bot is running...")
+    app.run_polling()
