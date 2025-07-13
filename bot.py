@@ -1,15 +1,14 @@
 import os
 import json
-import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, MessageHandler,
+    CallbackQueryHandler, ContextTypes, filters
+)
 
-# === CONFIGURATION ===
-TOKEN = os.getenv("BOT_TOKEN") or "8121739214:AAEK80VGwuS09y_exayUS6PRDryAldvbmkg"
+# Token from environment variable or fallback for local test
+TOKEN = os.getenv("BOT_TOKEN") or "YOUR_FALLBACK_TOKEN"
 DATA_FILE = "users.json"
-MIN_WITHDRAW = 20000
-MAX_WITHDRAW = 1000000
-REQUIRED_REFERRALS = 10
 
 REQUIRED_CHANNELS = [
     {"name": "Main Channel", "url": "https://t.me/flashpayyofficial"},
@@ -18,7 +17,10 @@ REQUIRED_CHANNELS = [
     {"name": "Withdraw Channel", "url": "https://t.me/flashpayybot"},
 ]
 
-# === DATA HANDLERS ===
+MIN_WITHDRAW = 20000
+MAX_WITHDRAW = 1000000
+REQUIRED_REFERRALS = 10
+
 def load_data():
     try:
         with open(DATA_FILE, "r") as f:
@@ -36,15 +38,15 @@ def init_user(user_id):
         data[str(user_id)] = {"balance": 0, "referrals": [], "invited_by": None}
         save_data(data)
 
-# === HANDLERS ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     init_user(user_id)
+
     if context.args:
         ref_id = context.args[0]
         if ref_id != user_id:
             data = load_data()
-            if ref_id in data and user_id not in data[ref_id]["referrals"]:
+            if user_id not in data.get(ref_id, {}).get("referrals", []):
                 data[ref_id]["referrals"].append(user_id)
                 data[ref_id]["balance"] += 3000
                 save_data(data)
@@ -81,7 +83,6 @@ async def withdraw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = load_data()
     bal = data[user_id]["balance"]
     refs = len(data[user_id]["referrals"])
-
     if bal < MIN_WITHDRAW:
         await update.message.reply_text("❌ Minimum withdrawal is ₦20,000.")
     elif bal > MAX_WITHDRAW:
@@ -98,8 +99,9 @@ async def channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("❓ I didn't understand that. Use the buttons.")
 
-# === MAIN APP ===
+# MAIN APP
 app = ApplicationBuilder().token(TOKEN).build()
+
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(joined, pattern="joined"))
 app.add_handler(MessageHandler(filters.Text("💰Balance"), balance))
@@ -108,9 +110,6 @@ app.add_handler(MessageHandler(filters.Text("📥Withdraw"), withdraw))
 app.add_handler(MessageHandler(filters.Text("📢Channels"), channels))
 app.add_handler(MessageHandler(filters.ALL, unknown))
 
-# === RUN BOT ===
 if __name__ == "__main__":
-    async def main():
-        print("✅ Bot is running...")
-        await app.run_polling()
-    asyncio.run(main())
+    print("✅ Bot is running...")
+    app.run_polling()
