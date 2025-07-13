@@ -1,8 +1,14 @@
+import os
 import json
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
+from telegram import (
+    Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+)
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, MessageHandler,
+    CallbackQueryHandler, ContextTypes, filters
+)
 
-TOKEN = "8121739214:AAEK80VGwuS09y_exayUS6PRDryAldvbmkg"
+TOKEN = os.getenv("BOT_TOKEN")
 DATA_FILE = "users.json"
 
 REQUIRED_CHANNELS = [
@@ -36,6 +42,7 @@ def init_user(user_id):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     init_user(user_id)
+
     if context.args:
         ref_id = context.args[0]
         if ref_id != user_id:
@@ -44,6 +51,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 data[ref_id]["referrals"].append(user_id)
                 data[ref_id]["balance"] += 3000
                 save_data(data)
+
     buttons = [[InlineKeyboardButton(ch["name"], url=ch["url"])] for ch in REQUIRED_CHANNELS]
     buttons.append([InlineKeyboardButton("✅ I’ve Joined", callback_data="joined")])
     await update.message.reply_text("📢 Please join all the required channels:", reply_markup=InlineKeyboardMarkup(buttons))
@@ -101,11 +109,13 @@ app.add_handler(MessageHandler(filters.Text("📥Withdraw"), withdraw))
 app.add_handler(MessageHandler(filters.Text("📢Channels"), channels))
 app.add_handler(MessageHandler(filters.ALL, unknown))
 
-import asyncio
-
-async def main():
-    print("✅ Bot is running...")
-    await app.run_polling()
-
 if __name__ == "__main__":
+    import asyncio
+    async def main():
+        print("✅ Bot is running...")
+        await app.initialize()
+        await app.start()
+        await app.updater.start_polling()
+        await app.updater.idle()
+
     asyncio.run(main())
